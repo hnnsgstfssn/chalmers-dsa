@@ -1,4 +1,6 @@
 #include "dsa.h"
+#include <fcntl.h>
+#include <unistd.h>
 
 DSA_SIG *dsa_sign(DSA *dsa, mpz_t D){
   if(dsa_validate_params(dsa))
@@ -10,7 +12,11 @@ DSA_SIG *dsa_sign(DSA *dsa, mpz_t D){
 
   gmp_randstate_t rs;
   gmp_randinit_default(rs);
-  gmp_randseed_ui(rs, arc4random());
+  int source = open("/dev/random", O_RDONLY);
+  int seed;
+  read(source, &seed, sizeof(seed));
+  close(source);
+  gmp_randseed_ui(rs, seed);
 
   mpz_t k;
   mpz_init(k);
