@@ -4,5 +4,9 @@ Assignment description is found in ´assignment.txt´.
 
 Testdata given in assignment is located in `testdata/`.
 
-Some simplifications made are:
-- The digest is defined as a `mpz_t`.
+Notable:
+- Uses [GMP](http://www.gmplib.org)
+- The digest is defined as a `mpz_t`
+- Depends on `/dev/random`
+
+A copy of the DSA spec can be found in section 4 of `fips_186-3.pdf`.
