@@ -1,4 +1,6 @@
 #include "dsa.h"
+#include <assert.h>
+#include <stdlib.h>
 
 int dsa_validate_params(DSA *dsa){
   assert(dsa != NULL);
@@ -10,6 +12,9 @@ int dsa_validate_params(DSA *dsa){
 
   /* g > 1 should hold */
   if(mpz_cmp_ui(dsa->g, 1) <= 0)
+    return 1;
+
+  if(mpz_cmp(dsa->g, dsa->p) >= 0)
     return 1;
 
   mpz_t tmp;
