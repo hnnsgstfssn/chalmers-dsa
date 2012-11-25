@@ -1,0 +1,278 @@
+
+Cryptography, Programming assignment
+
+
+Overview
+
+The programming assignment is to implement parts of the Digital_Signature
+Standard, a US standard for digital signatures. In particular, your task is to
+implement the signing and verification operations. In addition, you shall
+implement a check on DSA parameters, as detailed below.
+We will use existing libraries for multiprecision arithmetic, including modular
+exponentiation and inverses, and for pseudorandom number generation and
+primality testing. You may choose between three programming languages:
+
+  1. Java. Here most of what we need is provided by java.math.BigInteger. For
+     pseudorandom numbers we will use java.security.SecureRandom, which
+     provides cryptographically strong pseudorandom numbers. In addition, Java
+     has an elaborate infrastructure of library classes for cryptographic
+     applications, but we will not make use of that.
+  2. C. Here we will make use of GMP,_the_GNU_Multiple_Precision_Arithmetic
+     Library. This library provides all needed functionality, with the possible
+     exception that its pseudorandom numbers seem weak. We will, however, not
+     worry about that.
+     You can use GMP on our Linux machines (i.e. not on Windows).
+     To compile and link your program you need to supply the option -lgmp to
+     gcc:
+
+        gcc -lgmp yourfile.c
+
+     On these machines also C++ is supported; this is, however, only partially
+     tested.
+  3. Haskell. Here the primitive type Integer provides for multiple precision
+     arithmetic and adding modular exponentiation and inverses is easy (the
+     Haskell functions shown during lectures are efficient enough for the
+     assignment). Primality testing needs to be added, so the Haskell
+     programmer needs to do a few things that Java and C programmers get for
+     free.
+
+
+Digital Signature Standard
+
+For your work on this assignment, you need to have the DSS standard available.
+Note that this document is extensive (130 pages); you may want to print section
+4, pages 15-21.
+We note in particular two things:
+
+* The first step in both signing and verifying is to compute a hash value (a
+  message digest) of the message, using a suitable hash function. The signature
+  is then computed based only on the hash value. In this assignment, we will
+  skip this step and let both the signing and the verifying operations take a
+  hash value as argument rather than a message. A hash value is represented as
+  a 160 bit integer (recall that e.g. SHA-1 produces 160 bit hash values).
+* The algorithm depends on pseudorandom numbers for generating the long-term
+  private key and the ephemeral keys used for each signing. In the standard,
+  pseudorandom number generation is also based on SHA-1. We will disregard that
+  and use the random number generators available on each platform.
+
+
+Specification of the task
+
+The standard specifies three different signature algorithms: DSA, RSA and
+elliptic curve DSA (ECDSA). We will concentrate on DSA only, described in
+section 4 of the standard.
+We will also restrict ourselves to only the case L=1024, N=160 as discussed on
+page 15, i.e. p will be a 1024 bit prime and q a 160 bit prime. Since we assume
+that hash values are 160 bit numbers, we know that the expression min
+(N,outlen), which occurs several times in the description of signing,
+simplifies to N (=160).
+Your tasks are the following.
+
+  1. In the DSA, we have several occurrences of tuples of big integers, such as
+     the parameter triple (p,q,g) that defines the parameters of a DSA
+     community, the pair (x,y) of a public and a private key, the pair that
+     constitutes a signature etc. Define suitable classes/structures for this.
+     In Java, these should be simple classes that just provides a constructor
+     to build the tuple and selectors to get the parts.
+  2. Define the signing operation. This operation needs as input
+
+     o A parameter tuple (p,q,g);
+     o A long-term key pair;
+     o A message digest.
+
+     As output it produces a DSA signature.
+  3. Define the verification algorithm. This needs as input
+
+     o A parameter tuple (p,q,g);
+     o The public key of the signer;
+     o A message digest;
+     o A signature.
+
+     As output it produces a boolean value, indicating whether the signature is
+     accepted or not.
+     Note for Java programmers: It may be useful to define a class of DSA
+     users, that keep the long-term arguments (parameter tuple and long-term
+     keys) as part of their internal state; these need then not be arguments to
+     signing and verifying operations.
+  4. It is essential for the security of DSA that the parameter tuple is valid,
+     i.e. that
+
+     o both p and q are primes;
+     o p is a 1024 bit number and q a 160 bit number;
+     o q is a divisor of p-1;
+     o g has order q i.e. gq mod p = 1 and g > 1.
+
+     An ordinary DSA user will normally get such a tuple from somewhere, store
+     it and use it for a longer period of time (what long is depends of course
+     on the application). But what if the Adversary is the one that provides us
+     with parameters? We should check the above properties whenever we get a
+     parameter tuple. Implement such a check. In both GMP and Java we have
+     access to Miller-Rabin primality testing that can be used.
+  5. Write a main program that behaves as follows: The program reads input from
+     standard input and produces output to standard output. We supply a number
+     of example files that you can use for testing purposes, by directing input
+     from those files. These files are in a zip archive inputfiles.zip that you
+     should download to your working directory.
+     The input format has the following structure: The first three lines
+     defines a parameter tuple in the format examplified by
+
+       p=102865584259843077175583195011997798900482038016705824136288380475734860009055428071534495956844807748416572686838253895244634687898659646424515259679129905513743899853971066468883670407530107234961085482225328667572772611162756643027105617873895021996158552984843708233824989792811721408577351617080369547993
+       q=734415599462729831694143846331445277609193755927
+       g=63615006880335642768473038477258757436464860136916565207798584167060621564899979263408565137993978149206751054438974059615983337126379668370747907507911540381031959187353048278562320341063050939775344313271013777131358834376209974551749493023310606751625276738876397935042130121966817767949476523717161640453
+
+     You can assume that p, q and g are given in exactly this order. After
+     reading the parameters your program should check whether the parameter
+     tuple is valid. If it is not, your program should print a single line
+
+       invalid_group
+
+     and exit ignoring the rest of the input. Four files invalid1, invalid2,
+     invalid3 and invalid4, with invalid tuples (for various reasons) are
+     provided.
+     If, on the other hand, the parameters are valid, your program should print
+     a line
+
+       valid_group
+
+     and proceed to the next part of input. There are three different variants
+     of the remaining part:
+
+       1. The fourth line is genkey and the fifth and last line has the form
+          examplified by
+
+            n=5
+
+          The meaning of an input file of this form is that you should generate
+          n key pairs. The file genkey is of this form; a possible output of
+          your program for this input file is
+
+            valid_group
+            x=44023143238234878675882597930323767675626241722
+            y=27660283765844770664887658310197081020013641787546386440396028443250784285847485736541067440596157216715639417473806802837263125680298692607221339119122624348457488722606783349508434574529408897302592520154784836754289225893782936979972503172360120887962569805235530483035580004750158048247877808652224077159
+            x=222384055909646595010957691047304000435306705956
+            y=38444756118103726521075829840692753318803425509725526240959884730414272220793351580937031935810631815260822316958097293467761820640782656538279387124061752990240581737356875751968365001108046092974589266813192759851289861778334201206698531300509386674893230891322527131257519448328218007502390834384679776610
+            x=36567820023748278554523321493800726159765742102
+            y=97463231258915484414846109846683552447506082477816199558403884653388723168453046663547955430924453037534422190016240747097906110362032573063806071870167254090916887983410595989668904001732684175433483227747555343153869516683805692728887972526528318653793232491345460753519077438963871651564144783344459538840
+            x=461337390295681916279619159841527693317124080967
+            y=631357855119797443115906200384808050725861354922808508629539467093334191105212179054308579284075552227903199710418828482613750249818570522517553801739565860049522126541501170047847540336089449495962517820367880382878346643292422398570903210057863311252271365593837693007996617668298560812683106038777556945
+            x=356816198640470640889022466983427494746451612243
+            y=72089482844518293933394070474537930888405823087269879756534450240867041311176178665298906904218461070765604380713601039420085656455331576711350382483724005667593493027087811349706952210574330665616171581611608183087929758483435260997375296927464575941652643917819312610032583847611639214104309494507078353620
+
+          Note that other outputs are possible, since the x values are chosen
+          randomly.
+       2. The fourth line is sign. This is followed by further input lines
+          examplified by
+
+            x=339119201894965867922409227633199021527378715543
+            y=1099906791313925528746008054081768734007884349815325963667520491768596235922636596649198172987598573083011790017146356061273962023338014420645127092468263770753970716461208880423045761205934804880887634821616587683235765408867072852094816664326084550730344050243082288308837441908172297994552279650972016922
+            D=10B4D55F2376DBA00CE4A6AE2B122E9554035EF2
+            D=C1CBB20237CF8C5F58F3302C91DDE80388C3A7D5
+            D=F3085C02D207FEC52A77ED7F71413AE0457019BB
+            D=E9B5C24C07391D89EFDACE716C15F6CE4B15B267
+
+          We see the private key x and the public key y of a user, followed by
+          an unspecified number of rows, each containing a digest to be signed.
+          A digest consists of 40 hexadecimal digits, to interpreted as a 160
+          bit number.
+          A possible output for the file sign is
+
+            valid_group
+            r=728651259753097539835771978119317058803854277740
+            s=721310087832680377821405772468105119930345779997
+            r=231201521588902054816548334920123743421075562219
+            s=634605174088241009107782659978223218997918446621
+            r=99478726746463282876620051179449746781689142783
+            s=140929366406598148201916718835208895494367489263
+            r=345124869524694007447106742907485803505135383944
+            s=327693605609234909650727581772349700796542107460
+
+          Again, other outputs are possible, since signing involves choosing a
+          random number k.
+       3. The fourth line is verify. This is followed by further lines as
+          examplified by the file verify:
+
+            y=1099906791313925528746008054081768734007884349815325963667520491768596235922636596649198172987598573083011790017146356061273962023338014420645127092468263770753970716461208880423045761205934804880887634821616587683235765408867072852094816664326084550730344050243082288308837441908172297994552279650972016922
+            D=10B4D55F2376DBA00CE4A6AE2B122E9554035EF2
+            r=497727687827108870230917469165124644171957997527
+            s=69924200561536940344114164706214298822631922629
+            D=C1CBB20237CF8C5F58F3302C91DDE80388C3A7D5
+            r=621290758154570182233674338121884126329819879467
+            s=637349847132094548544219137447298026216751146622
+            D=C1CBB20237CF8C5F58F3302C91DDE80388C3A7D5
+            r=621290758154570182233674338121884126329819879463
+            s=637349847132094548544219137447298026216751146622
+            D=F3085C02D207FEC52A77ED7F71413AE0457019BB
+            r=533440486478257478164118012984911391710006461198
+            s=348837689732155341159073040592354385064277031153
+            D=E9B5C24C07391D89EFDACE716C15F6CE4B15B267
+            r=542253714026926600853868158208742583136062887296
+            s=349166196195444856326255725745900169521869579779
+            D=E9B5C24C07391D89EFDACE716C15F6CE4B15B267
+            r=542253714026926600853868158208742583136062887296
+            s=349166196195444856326255725745900169521869579778
+
+          The fifth line is the public key y of a user and the following input
+          consists of a number of groups of three lines, each describing a
+          digest D and a proposed signature (r,s). Your program should try to
+          verify each of these and output signature_valid or signature_invalid
+          for each. The output for input file verify should be
+
+            valid_group
+            signature_valid
+            signature_valid
+            signature_invalid
+            signature_valid
+            signature_valid
+            signature_invalid
+
+          Here there is no variation in output; your output for file verify
+          should be exactly as shown here.
+
+
+
+Further hints and requirements
+
+
+* Note that it is essential for security that the private keys (variables x and
+  k in the standard) are chosen at random in the interval 0 < x< q, 0 < k < q.
+  If your library has functions to produce 160 bit random numbers, you can use
+  this and repeatedly generate a number until you get one in the correct range
+  (q is a 160 bit number, so the randomly generated number may be too big, but
+  not many random draws should be needed to get a number smaller than q).
+* You are strongly advised to work out an example by hand using small numbers
+  and test your signing and verification algorithms with printout of
+  intermediary results during development. However, such printouts should be
+  removed in the submitted version.
+* In implementing a standard such as DSA which has a carefully stated
+  definition, code reading is a main vehicle for checking correctness.
+  Therefore you must adhere to the following rules:
+
+  o Variable names must be chosen to be those in the standard definition of the
+    algorithms for signing and verification.
+  o Arithmetic operations as provided by the library does not use ordinary
+    infix notation. As examples, x = y+z is written
+
+      x=y.add(z);
+      mpz_add(x,y,z);
+
+    in Java and C, respectively. For more complicated expressions this quickly
+    becomes unreadable. Therefore you must comment your code on a line-by-line
+    basis using ordinary notation.
+
+* When your program works, you can easily paste your signatures produced from
+  the sign file (which will be different from the ones shown above, because of
+  randomness) to the end of verify and check that you can verify your own
+  signatures.
+* Be extremely careful in following the standard, in particular regarding mod
+  operations.
+* Make sure that the data that your program should print out does not get stuck
+  in output buffers. The standard output is unbuffered by default when program
+  is run interactively, but buffering kicks in when the standard input and
+  output are redirected.
+
+  o In C you can either call fflush() after writing each line, or execute
+    setlinebuf(stdout) at the beginning of the program;
+  o In Java it seems that standard output is unbuffered by default, so no
+    action is needed;
+  o In Haskell you need to call hSetBuffering stdout LineBuffering at the
+    beginning.
