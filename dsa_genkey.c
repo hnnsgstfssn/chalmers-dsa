@@ -1,4 +1,6 @@
 #include "dsa.h"
+#include <stdlib.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <unistd.h>
 

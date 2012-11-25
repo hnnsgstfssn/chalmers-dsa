@@ -1,4 +1,6 @@
 #include "dsa.h"
+#include <assert.h>
+#include <stdlib.h>
 
 int dsa_verify(DSA *dsa, mpz_t D, DSA_SIG *sig){
   assert(dsa != NULL);

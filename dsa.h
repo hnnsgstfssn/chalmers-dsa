@@ -7,9 +7,7 @@
 /* REPS are used in mpz_probab_prime_p when validating the p, q, g tuple */
 #define DSA_REPS 10
 
-#include <assert.h>
 #include <gmp.h>
-#include <stdlib.h>
 
 typedef struct DSA_SIG {
   mpz_t r;

@@ -1,6 +1,8 @@
 #include "dsa.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <assert.h>
 
 DSA_SIG *dsa_sign(DSA *dsa, mpz_t D){
   if(dsa_validate_params(dsa))
